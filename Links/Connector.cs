@@ -8,7 +8,7 @@ namespace WordCounter.Common
 {
     public class Connector
     {
-        public IConnection ConnectToQueue(ILogger _logger, QueueSettings settings)
+        public IConnection ConnectToQueue(ILogger logger, QueueSettings settings)
         {
             RabbitMQ.Client.ConnectionFactory factory = new RabbitMQ.Client.ConnectionFactory()
             {
@@ -30,7 +30,7 @@ namespace WordCounter.Common
                 catch (Exception ex)
                 {
                     toLog = ex;
-                    _logger.LogWarning($"connect to queue failed: {ex.Message}");
+                    logger.LogWarning($"connect to queue failed: {ex.Message}");
                 }
                 Thread.Sleep((int)TimeSpan.FromSeconds(2).TotalMilliseconds);
             }
