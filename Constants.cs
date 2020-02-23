@@ -2,10 +2,26 @@
 {
     public class Constants
     {
-        public const string RabbitMqHost = "RabbitMqHost";
-        public const string RabbitMqPort = "RabbitMqPort";
-        public const string RabbitMqUser = "RabbitMqUser";
-        public const string RabbitMqPass = "RabbitMqPass";
+        public static class Environment
+        {
+            public static class Queue
+            {
+                public const string RabbitMqHost = "RabbitMqHost";
+                public const string RabbitMqPort = "RabbitMqPort";
+                public const string RabbitMqUser = "RabbitMqUser";
+                public const string RabbitMqPass = "RabbitMqPass";
+            }
+
+            public static class Database
+            {
+                public const string Host = "DbHost";
+                public const string Port = "DbPort";
+                public const string User = "DbUser";
+                public const string Pass = "DbPass";
+                public const string Db = "Db";
+            }
+        }
+
 
         public const string ArticlesExchange = "articles";
         public const string RoutingKey = "";
