@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading;
+using RabbitConnectionFactory = RabbitMQ.Client.ConnectionFactory;
 
 namespace WordCounter.Common
 {
@@ -10,71 +12,78 @@ namespace WordCounter.Common
     {
         public IConnection ConnectToQueue(ILogger logger, QueueSettings settings)
         {
-            RabbitMQ.Client.ConnectionFactory factory = new RabbitMQ.Client.ConnectionFactory()
+            Func<IConnection> connect = () =>
             {
-                HostName = settings.HostName,
-                Port = settings.Port,
-                UserName = settings.UserName,
-                Password = settings.Password,
+                var connection = new RabbitConnectionFactory()
+                {
+                    HostName = settings.HostName,
+                    Port = settings.Port,
+                    UserName = settings.UserName,
+                    Password = settings.Password,
+                }.CreateConnection();
+                return connection;
             };
 
-            var end = DateTime.UtcNow.Add(settings.TimeoutToConnect);
-            Exception toLog = null;
-            while (DateTime.UtcNow < end)
-            {
-                try
-                {
-                    var connection = factory.CreateConnection();
-                    return connection;
-                }
-                catch (Exception ex)
-                {
-                    toLog = ex;
-                    logger.LogWarning($"connect to queue failed: {ex.Message}");
-                }
-                Thread.Sleep((int)TimeSpan.FromSeconds(2).TotalMilliseconds);
-            }
-            if (toLog != null)
-            {
-                throw toLog;
-            }
-            throw new Exception("no retries left");
+            IConnection connection = EnsureIsUp(logger, settings, connect);
+            return connection;
         }
 
         public void EnsureDbIsUp(ILogger _logger, DbSettings settings)
         {
-            var end = DateTime.UtcNow.Add(settings.TimeoutToConnect);
+            Func<bool> connect = () =>
+            {
+                using (IDbConnection connection = ConnectionFactory.GetConnection(settings))
+                {
+                    connection.Open();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "SELECT 1";
+                        using (var reader = command.ExecuteReader())
+                        {
+                            return true;
+                        }
+                    }
+                }
+            };
+
+            EnsureIsUp(_logger, settings, connect);
+        }
+
+        public T EnsureIsUp<T>(ILogger logger, ConnectSettings settings, Func<T> ping)
+        {
+            var end = DateTime.UtcNow.Add(settings.ConnectTimeout);
             Exception toLog = null;
-            bool success = false;
-            while (DateTime.UtcNow < end && !success)
+            T result = default;
+            while (DateTime.UtcNow < end && IsDefault(result))
             {
                 try
                 {
-                    IDbConnection connection = ConnectionFactory.GetConnection(settings);
-                    connection.Open();
-                    // execute select 1?
-                    connection.Close();
-                    success = true;
-                    break;
+                    result = ping();
                 }
                 catch (Exception ex)
                 {
                     toLog = ex;
-                    _logger.LogWarning($"connect to db failed: {ex.Message}");
+                    logger?.LogWarning($"connect to {settings.DependencyName} failed: {ex.Message}");
                 }
-                if (!success)
+                if (EqualityComparer<T>.Default.Equals(result, default))
                 {
-                    Thread.Sleep((int)settings.TimeoutToConnect.TotalMilliseconds);
+                    Thread.Sleep((int)settings.RetryDelay.TotalMilliseconds);
                 }
             }
-            if (toLog != null)
+            if (toLog != null && IsDefault(result))
             {
                 throw toLog;
             }
-            if (!success)
+            if (IsDefault(result))
             {
-                throw new Exception("no retries left");
+                throw new Exception($"FATAL: connect to {settings.DependencyName} failed: no retries left");
             }
+            return result;
+        }
+
+        private static bool IsDefault<T>(T obj) 
+        {
+            return EqualityComparer<T>.Default.Equals(obj, default);
         }
     }
 }

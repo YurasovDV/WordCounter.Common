@@ -11,8 +11,6 @@ namespace WordCounter.Common
             settings.Port = GetEnvironmentAsIntOrThrow(Constants.Environment.Queue.RabbitMqPort);
             settings.UserName = GetEnvironmentOrThrow(Constants.Environment.Queue.RabbitMqUser);
             settings.Password = GetEnvironmentOrThrow(Constants.Environment.Queue.RabbitMqPass);
-            settings.TimeoutToConnect = TimeSpan.FromMinutes(3);
-
             return settings;
         }
 
@@ -25,7 +23,6 @@ namespace WordCounter.Common
             settings.Password = GetEnvironmentOrThrow(Constants.Environment.Database.Pass);
             settings.DatabaseName = GetEnvironmentOrThrow(Constants.Environment.Database.Db);
             settings.IsPostgres = true;
-            settings.TimeoutToConnect = TimeSpan.FromMinutes(3);
             settings.ConnectionFactory = new ConnectionFactory();
 
             return settings;

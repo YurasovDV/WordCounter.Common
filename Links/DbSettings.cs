@@ -2,8 +2,15 @@
 
 namespace WordCounter.Common
 {
-    public class DbSettings
+    public class DbSettings : ConnectSettings
     {
+        public DbSettings()
+        {
+            DependencyName = "db";
+            ConnectTimeout = TimeSpan.FromMinutes(5);
+            RetryDelay = TimeSpan.FromSeconds(2);
+        }
+
         public string HostName { get; set; }
 
         public int Port { get; set; }
@@ -13,8 +20,6 @@ namespace WordCounter.Common
         public string UserName { get; set; }
 
         public string Password { get; set; }
-
-        public TimeSpan TimeoutToConnect { get; set; }
 
         public ConnectionFactory ConnectionFactory { get; set; }
 

@@ -1,14 +1,15 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 using Npgsql;
+using System;
 
 namespace WordCounter.Common
 {
     public class ConnectionFactory
     {
-        public static IDbConnection GetConnection(DbSettings settings)
+        public static string GetConnectionString(DbSettings settings)
         {
-            IDbConnection conn;
+            string connectionString;
             if (settings.IsPostgres)
             {
                 var builder = new NpgsqlConnectionStringBuilder();
@@ -16,7 +17,8 @@ namespace WordCounter.Common
                 builder.Port = settings.Port;
                 builder.Username = settings.UserName;
                 builder.Password = settings.Password;
-                conn = new NpgsqlConnection(builder.ConnectionString);
+                builder.Database = settings.DatabaseName;
+                connectionString = builder.ConnectionString;
             }
             else
             {
@@ -24,7 +26,23 @@ namespace WordCounter.Common
                 sqlServerBuilder.DataSource = settings.HostName;
                 sqlServerBuilder.UserID = settings.UserName;
                 sqlServerBuilder.Password = settings.Password;
-                conn = new SqlConnection(sqlServerBuilder.ConnectionString);
+                sqlServerBuilder.InitialCatalog = settings.DatabaseName;
+                connectionString = sqlServerBuilder.ConnectionString;
+            }
+            return connectionString;
+        }
+
+        public static IDbConnection GetConnection(DbSettings settings)
+        {
+            IDbConnection conn;
+            var connectionString = GetConnectionString(settings);
+            if (settings.IsPostgres)
+            {
+                conn = new NpgsqlConnection(connectionString);
+            }
+            else
+            {
+                conn = new SqlConnection(connectionString);
             }
             return conn;
         }
