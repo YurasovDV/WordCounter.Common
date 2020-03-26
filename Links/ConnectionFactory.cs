@@ -1,7 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 using Npgsql;
-using System;
 
 namespace WordCounter.Common
 {

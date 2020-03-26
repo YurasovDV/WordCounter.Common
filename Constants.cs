@@ -20,6 +20,13 @@
                 public const string Pass = "DbPass";
                 public const string Db = "Db";
             }
+
+            public static class Elastic
+            {
+                public const string Host = "ElasticHost";
+                public const string Port = "ElasticPort";
+                public const string Index = "ElasticIndex";
+            }
         }
 
 

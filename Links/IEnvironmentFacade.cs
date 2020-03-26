@@ -4,5 +4,7 @@
     {
         DbSettings BuildDbSettings();
         QueueSettings BuildQueueSettings();
+
+        ElasticSettings BuildElasticSettings();
     }
 }

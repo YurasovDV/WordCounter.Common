@@ -28,6 +28,16 @@ namespace WordCounter.Common
             return settings;
         }
 
+        public ElasticSettings BuildElasticSettings()
+        {
+            var settings = new ElasticSettings();
+            settings.HostName = GetEnvironmentOrThrow(Constants.Environment.Elastic.Host);
+            settings.Port = GetEnvironmentAsIntOrThrow(Constants.Environment.Elastic.Port);
+            settings.IndexName = GetEnvironmentOrThrow(Constants.Environment.Elastic.Index);
+
+            return settings;
+        }
+
         private static string GetEnvironmentOrThrow(string variableName)
         {
             var value = Environment.GetEnvironmentVariable(variableName);
